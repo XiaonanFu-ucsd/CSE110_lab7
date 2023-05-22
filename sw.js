@@ -56,23 +56,32 @@ self.addEventListener('fetch', function (event) {
   /*******************************/
   // B7. TODO - Respond to the event by opening the cache using the name we gave
   //            above (CACHE_NAME)
-  const putInCache = async (request, response) => {
-    const cache = await caches.open(CACHE_NAME);
-    await cache.put(request, response);
-  };
+  // const putInCache = async (request, response) => {
+  //   const cache = await caches.open(CACHE_NAME);
+  //   await cache.put(request, response);
+  // };
   
-  const cacheFirst = async (request) => {
-    const responseFromCache = await caches.match(request);
-    if (responseFromCache) {
-      return responseFromCache;
-    }
-    const responseFromNetwork = await fetch(request);
-    putInCache(request, responseFromNetwork.clone());
-    return responseFromNetwork;
-  };
-  // B8. TODO - If the request is in the cache, return with the cached version.
-  //            Otherwise fetch the resource, add it to the cache, and return
-  //            network response.
-  event.respondWith(cacheFirst(event.request));
-
+  // const cacheFirst = async (request) => {
+  //   const responseFromCache = await caches.match(request);
+  //   if (responseFromCache) {
+  //     return responseFromCache;
+  //   }
+  //   const responseFromNetwork = await fetch(request);
+  //   putInCache(request, responseFromNetwork.clone());
+  //   return responseFromNetwork;
+  // };
+  // // B8. TODO - If the request is in the cache, return with the cached version.
+  // //            Otherwise fetch the resource, add it to the cache, and return
+  // //            network response.
+  // event.respondWith(cacheFirst(event.request));
+  event.respondWith(
+    caches.match(event.request).then(function(resp) {
+      return resp || fetch(event.request).then(function(response) {
+        return caches.open(CACHE_NAME).then(function(cache) {
+          cache.put(event.request, response.clone());
+          return response;
+        });
+      });
+    })
+  );
 });
