@@ -3,13 +3,35 @@
 
 const CACHE_NAME = 'lab-7-starter';
 
+console.log('Service Worker is running');
+
 // Installs the service worker. Feed it some initial URLs to cache
 self.addEventListener('install', function (event) {
   event.waitUntil(
     caches.open(CACHE_NAME).then(function (cache) {
       // B6. TODO - Add all of the URLs from RECIPE_URLs here so that they are
       //            added to the cache when the ServiceWorker is installed
-      return cache.addAll([]);
+      const RECIPE_URLS = [
+        '/',
+        '/index.html',
+        '/assets/scripts/main.js',
+        '/assets/scripts/RecipeCard.js',
+        '/assets/styles/main.css',
+        "/assets/images/icons/0-star.svg",
+        "/assets/images/icons/1-star.svg",
+        "/assets/images/icons/2-star.svg",
+        "/assets/images/icons/3-star.svg",
+        "/assets/images/icons/4-star.svg",
+        "/assets/images/icons/5-star.svg",
+        "/assets/images/icons/arrow-down.png",
+        "https://introweb.tech/assets/json/1_50-thanksgiving-side-dishes.json",
+        "https://introweb.tech/assets/json/2_roasting-turkey-breast-with-stuffing.json",
+        "https://introweb.tech/assets/json/3_moms-cornbread-stuffing.json",
+        "https://introweb.tech/assets/json/4_50-indulgent-thanksgiving-side-dishes-for-any-holiday-gathering.json",
+        "https://introweb.tech/assets/json/5_healthy-thanksgiving-recipe-crockpot-turkey-breast.json",
+        "https://introweb.tech/assets/json/6_one-pot-thanksgiving-dinner.json",
+      ];
+      return cache.addAll(RECIPE_URLS);
     })
   );
 });
@@ -34,7 +56,23 @@ self.addEventListener('fetch', function (event) {
   /*******************************/
   // B7. TODO - Respond to the event by opening the cache using the name we gave
   //            above (CACHE_NAME)
+  const putInCache = async (request, response) => {
+    const cache = await caches.open(CACHE_NAME);
+    await cache.put(request, response);
+  };
+  
+  const cacheFirst = async (request) => {
+    const responseFromCache = await caches.match(request);
+    if (responseFromCache) {
+      return responseFromCache;
+    }
+    const responseFromNetwork = await fetch(request);
+    putInCache(request, responseFromNetwork.clone());
+    return responseFromNetwork;
+  };
   // B8. TODO - If the request is in the cache, return with the cached version.
   //            Otherwise fetch the resource, add it to the cache, and return
   //            network response.
+  event.respondWith(cacheFirst(event.request));
+
 });
